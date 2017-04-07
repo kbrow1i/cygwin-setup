@@ -60,6 +60,7 @@ AC_CHECK_HEADER(zlib.h, , missing_deps="$missing_deps zlib")
 AC_CHECK_HEADER(bzlib.h, , missing_deps="$missing_deps libbz2")
 AC_CHECK_HEADER(lzma.h, , missing_deps="$missing_deps liblzma")
 AC_CHECK_HEADER(gcrypt.h, , missing_deps="$missing_deps libgcrypt")
+AC_CHECK_HEADER(solv/pool.h, , missing_deps="$missing_deps libsolv")
 
 if test -n "$missing_deps"; then
 	AC_MSG_ERROR([missing prerequisites: $missing_deps])

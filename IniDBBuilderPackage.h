@@ -17,11 +17,15 @@
 #define SETUP_INIDBBUILDERPACKAGE_H
 
 #include <vector>
-#include "package_version.h"
+#include <set>
+
+#include "package_message.h"
+#include "PackageTrust.h"
+#include "String++.h"
+#include "libsolv.h"
 
 class IniParseFeedback;
 class packagesource;
-class packagemeta;
 
 enum class hashType { none, md5, sha512 };
 
@@ -48,7 +52,7 @@ public:
   void buildPackageSource (const std::string& path, const std::string& size)
   { buildPackageSource(path, size, NULL, hashType::none); }
 
-  void buildPackageTrust (package_stability_t);
+  void buildPackageTrust (trusts);
   void buildPackageCategory (const std::string& );
 
   void buildBeginDepends ();
@@ -63,6 +67,7 @@ public:
   void set_arch (const std::string& a) { arch = a; }
   void set_release (const std::string& rel) { release = rel; }
 
+  // setup.ini header data
   unsigned int timestamp;
   std::string arch;
   std::string release;
@@ -70,16 +75,17 @@ public:
   std::string parse_mirror;
 
 private:
-  void add_correct_version();
-  void process_src (packagesource &src, const std::string& );
-  void setSourceSize (packagesource &src, const std::string& );
+  void process ();
 
-  packagemeta *cp;
-  packageversion cbpv;
-  packagemeta *csp;
-  packageversion cspv;
+  // package data
+  std::string name;
+  std::set <std::string, casecompare_lt_op> categories;
+  std::string message_id;
+  std::string message_string;
   PackageSpecification *currentSpec;
   PackageDepends currentNodeList;
+  SolverPool::addPackageData cbpv;
+
   IniParseFeedback const &_feedback;
 };
 
