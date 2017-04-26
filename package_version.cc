@@ -53,8 +53,6 @@ public:
   const std::string LDesc () {return std::string();}
   void set_ldesc (const std::string& ) {}
   void uninstall (){}
-  void pick(bool const &newValue){/* Ignore attempts to pick this!. Throw an exception here if you want to detect such attemtps instead */}
-  virtual bool accessible () const {return false;}
 };
 static _defaultversion defaultversion;
 
@@ -235,20 +233,6 @@ const PackageDepends
 packageversion::depends() const
 {
   return data->depends;
-}
-
-bool
-packageversion::picked () const
-{
-  return data->picked;
-}
-
-void 
-packageversion::pick (bool aBool, packagemeta *pkg)
-{
-  data->pick(aBool);
-  if (pkg && aBool)
-    pkg->message.display ();
 }
 
 void

@@ -747,12 +747,12 @@ do_install_thread (HINSTANCE h, HWND owner)
   {
     packagemeta & pkg = *(i->second);
 
-    if (pkg.desired.picked())
+    if (pkg.picked())
     {
       md5sum_total_bytes += pkg.desired.source()->size;
     }
 
-    if (pkg.desired.sourcePackage ().picked() || IncludeSource)
+    if (pkg.srcpicked() || IncludeSource)
     {
       md5sum_total_bytes += pkg.desired.sourcePackage ().source()->size;
     }
@@ -766,7 +766,7 @@ do_install_thread (HINSTANCE h, HWND owner)
   {
     packagemeta & pkg = *(i->second);
 
-    if (pkg.desired.picked())
+    if (pkg.picked())
     {
       try
       {
@@ -775,9 +775,9 @@ do_install_thread (HINSTANCE h, HWND owner)
       catch (Exception *e)
       {
         if (yesno (owner, IDS_SKIP_PACKAGE, e->what()) == IDYES)
-          pkg.desired.pick (false, &pkg);
+          pkg.pick (false);
       }
-      if (pkg.desired.picked())
+      if (pkg.picked())
       {
         md5sum_total_bytes_sofar += pkg.desired.source()->size;
         total_bytes += pkg.desired.source()->size;
@@ -785,7 +785,7 @@ do_install_thread (HINSTANCE h, HWND owner)
       }
     }
 
-    if (pkg.desired.sourcePackage ().picked() || IncludeSource)
+    if (pkg.srcpicked() || IncludeSource)
     {
       bool skiprequested = false ;
       try
@@ -797,10 +797,10 @@ do_install_thread (HINSTANCE h, HWND owner)
         if (yesno (owner, IDS_SKIP_PACKAGE, e->what()) == IDYES)
 	{
 	  skiprequested = true ; //(err occurred,) skip pkg desired
-          pkg.desired.sourcePackage ().pick (false, &pkg);
+          pkg.srcpick (false);
 	}
       }
-      if (pkg.desired.sourcePackage().picked() || (IncludeSource && !skiprequested))
+      if (pkg.srcpicked() || (IncludeSource && !skiprequested))
       {
         md5sum_total_bytes_sofar += pkg.desired.sourcePackage ().source()->size;
         total_bytes += pkg.desired.sourcePackage ().source()->size;
@@ -808,8 +808,9 @@ do_install_thread (HINSTANCE h, HWND owner)
       }
     }
 
+    /* Upgrade or reinstall */
     if ((pkg.installed && pkg.desired != pkg.installed)
-        || pkg.installed.picked ())
+        || pkg.picked ())
     {
       uninstall_q.push_back (&pkg);
     }
