@@ -575,7 +575,7 @@ void
 packagemeta::logAllVersions () const
 {
     for (set<packageversion>::iterator i = versions.begin();
-	 i != versions.end(); ++i) 
+	 i != versions.end(); ++i)
       {
 	Log (LOG_BABBLE) << "    [" << trustLabel(*i) <<
 	  "] ver=" << i->Canonical_version() << endLog;
@@ -627,20 +627,8 @@ packagemeta::logSelectionStatus() const
    pkg.installed ? pkg.installed.Canonical_version () : "none";
 
   Log (LOG_BABBLE) << "[" << pkg.name << "] action=" << action << " trust=" << trust << " installed=" << installed << " src?=" << (pkg.desired && srcpicked() ? "yes" : "no") << endLog;
-  if (pkg.categories.size ())
-    Log (LOG_BABBLE) << "     categories=" << for_each(pkg.categories.begin(), pkg.categories.end(), StringConcatenator(", ")).result << endLog;
-#if 0
-  if (pkg.desired.required())
-  {
-    /* List other packages this package depends on */
-      Dependency *dp = pkg.desired->required;
-    std::string requires = dp->package.serialise ();
-    for (dp = dp->next; dp; dp = dp->next)
-       requires += std::string (", ") + dp->package.serialise ();
+  Log (LOG_BABBLE) << "    categories=" << for_each(pkg.categories.begin(), pkg.categories.end(), StringConcatenator(", ")).result << endLog;
 
-   Log (LOG_BABBLE) << "     requires=" << requires;
-    }
-#endif
   pkg.logAllVersions();
 }
 

@@ -433,7 +433,9 @@ packagedb::connectedBegin()
            dependencyOrderedPackages.begin();
            i != dependencyOrderedPackages.end(); ++i)
         s = s + (*i)->name + " ";
+#if DEBUG
       Log (LOG_BABBLE) << s << endLog;
+#endif
     }
   return dependencyOrderedPackages.begin();
 }

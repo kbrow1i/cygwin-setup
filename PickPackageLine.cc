@@ -121,6 +121,8 @@ PickPackageLine::paint (HDC hdc, HRGN unused, int x, int y, int col_num, int sho
 int
 PickPackageLine::click (int const myrow, int const ClickedRow, int const x)
 {
+  pkg.logSelectionStatus();
+
   // assert (myrow == ClickedRow);
   if (x >= theView.headers[theView.new_col].x - HMARGIN / 2
       && x <= theView.headers[theView.new_col + 1].x - HMARGIN / 2)
