@@ -110,9 +110,8 @@ public:
   PackageSpecification & sourcePackageSpecification () const;
   void setSourcePackageSpecification (PackageSpecification const &);
 
-  /* invariant: these never return NULL */
-  PackageDepends *depends();
-  const PackageDepends *depends() const;
+  void setDepends(const PackageDepends);
+  const PackageDepends depends() const;
 
   bool picked() const;   /* true if this version is to be installed */
   void pick(bool, packagemeta *); /* trigger an install/reinsall */
