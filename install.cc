@@ -69,7 +69,6 @@ static long long int total_bytes = 0;
 static long long int total_bytes_sofar = 0;
 static int package_bytes = 0;
 
-extern BoolOption IncludeSource;
 static BoolOption NoReplaceOnReboot (false, 'r', "no-replaceonreboot",
 				     "Disable replacing in-use files on next "
 				     "reboot.");
@@ -806,84 +805,61 @@ do_install_thread (HINSTANCE h, HWND owner)
   /* Writes Cygwin/setup/rootdir registry value */
   create_install_root ();
 
-  vector <packagemeta *> install_q, uninstall_q, sourceinstall_q;
+  vector <packageversion> install_q, uninstall_q, sourceinstall_q;
 
   packagedb db;
+  const SolverTransactionList &t = db.solution.transactions();
 
   /* Calculate the amount of data to md5sum */
   Progress.SetText1("Calculating...");
   long long int md5sum_total_bytes = 0;
-  for (packagedb::packagecollection::iterator i = db.packages.begin ();
-       i != db.packages.end (); ++i)
+  for (SolverTransactionList::const_iterator i = t.begin (); i != t.end (); ++i)
   {
-    packagemeta & pkg = *(i->second);
+    packageversion version = i->version;
 
-    if (pkg.picked())
+    if (i->type == SolverTransaction::transInstall)
     {
-      md5sum_total_bytes += pkg.desired.source()->size;
-    }
-
-    if (pkg.srcpicked() || IncludeSource)
-    {
-      md5sum_total_bytes += pkg.desired.sourcePackage ().source()->size;
+      md5sum_total_bytes += version.source()->size;
     }
   }
 
   /* md5sum the packages, build lists of packages to install and uninstall
      and calculate the total amount of data to install */
   long long int md5sum_total_bytes_sofar = 0;
-  for (packagedb::packagecollection::iterator i = db.packages.begin ();
-       i != db.packages.end (); ++i)
+  for (SolverTransactionList::const_iterator i = t.begin (); i != t.end (); ++i)
   {
-    packagemeta & pkg = *(i->second);
+    packageversion version = i->version;
+    packagemeta *pkgm = db.findBinary (PackageSpecification(version.Name()));
+    if (!pkgm)
+      pkgm = db.findSource (PackageSpecification(version.Name()));
 
-    if (pkg.picked())
+    if (i->type == SolverTransaction::transInstall)
     {
       try
       {
-        chksum_one (pkg, *pkg.desired.source ());
+        chksum_one (*pkgm, *version.source ());
       }
       catch (Exception *e)
       {
-        if (yesno (owner, IDS_SKIP_PACKAGE, e->what()) == IDYES)
-          pkg.pick (false);
+        yesno (owner, IDS_SKIP_PACKAGE, e->what());
       }
-      if (pkg.picked())
       {
-        md5sum_total_bytes_sofar += pkg.desired.source()->size;
-        total_bytes += pkg.desired.source()->size;
-        install_q.push_back (&pkg);
+        md5sum_total_bytes_sofar += version.source()->size;
+        total_bytes += version.source()->size;
+
+        // source packages are kept in a separate queue as they are installed
+        // differently: root is /usr/src, install isn't recorded, etc.
+        if (version.Type() == package_source)
+          sourceinstall_q.push_back (version);
+        else
+          install_q.push_back (version);
       }
     }
 
-    if (pkg.srcpicked() || IncludeSource)
+    /* Uninstall, upgrade or reinstall */
+    if (i->type == SolverTransaction::transErase)
     {
-      bool skiprequested = false ;
-      try
-      {
-        chksum_one (pkg, *pkg.desired.sourcePackage ().source ());
-      }
-      catch (Exception *e)
-      {
-        if (yesno (owner, IDS_SKIP_PACKAGE, e->what()) == IDYES)
-	{
-	  skiprequested = true ; //(err occurred,) skip pkg desired
-          pkg.srcpick (false);
-	}
-      }
-      if (pkg.srcpicked() || (IncludeSource && !skiprequested))
-      {
-        md5sum_total_bytes_sofar += pkg.desired.sourcePackage ().source()->size;
-        total_bytes += pkg.desired.sourcePackage ().source()->size;
-        sourceinstall_q.push_back (&pkg);
-      }
-    }
-
-    /* Upgrade or reinstall */
-    if ((pkg.installed && pkg.desired != pkg.installed)
-        || pkg.picked ())
-    {
-      uninstall_q.push_back (&pkg);
+      uninstall_q.push_back (version);
     }
 
     if (md5sum_total_bytes > 0)
@@ -892,27 +868,31 @@ do_install_thread (HINSTANCE h, HWND owner)
 
   /* start with uninstalls - remove files that new packages may replace */
   Progress.SetBar2(0);
-  for (vector <packagemeta *>::iterator i = uninstall_q.begin ();
+  for (vector <packageversion>::iterator i = uninstall_q.begin ();
        i != uninstall_q.end (); ++i)
   {
-    myInstaller.preremoveOne (**i);
+    packagemeta *pkgm = db.findBinary (PackageSpecification(i->Name()));
+    myInstaller.preremoveOne (*pkgm);
     Progress.SetBar2(std::distance(uninstall_q.begin(), i) + 1, uninstall_q.size());
   }
 
   Progress.SetBar2(0);
-  for (vector <packagemeta *>::iterator i = uninstall_q.begin ();
+  for (vector <packageversion>::iterator i = uninstall_q.begin ();
        i != uninstall_q.end (); ++i)
   {
-    myInstaller.uninstallOne (**i);
+    packagemeta *pkgm = db.findBinary (PackageSpecification(i->Name()));
+    myInstaller.uninstallOne (*pkgm);
     Progress.SetBar2(std::distance(uninstall_q.begin(), i) + 1, uninstall_q.size());
   }
 
-  for (vector <packagemeta *>::iterator i = install_q.begin ();
+  for (vector <packageversion>::iterator i = install_q.begin ();
        i != install_q.end (); ++i)
   {
-    packagemeta & pkg = **i;
+    packageversion & pkg = *i;
+    packagemeta *pkgm = db.findBinary (PackageSpecification(i->Name()));
+
     try {
-      myInstaller.installOne (pkg, pkg.desired, *pkg.desired.source(),
+      myInstaller.installOne (*pkgm, pkg, *pkg.source(),
                               "cygfile://", "/", owner);
     }
     catch (exception *e)
@@ -927,12 +907,12 @@ do_install_thread (HINSTANCE h, HWND owner)
     }
   }
 
-  for (vector <packagemeta *>::iterator i = sourceinstall_q.begin ();
+  for (vector <packageversion>::iterator i = sourceinstall_q.begin ();
        i != sourceinstall_q.end (); ++i)
   {
-    packagemeta & pkg = **i;
-    myInstaller.installOne (pkg, pkg.desired.sourcePackage(),
-                            *pkg.desired.sourcePackage().source(),
+    packagemeta *pkgm = db.findSource (PackageSpecification(i->Name()));
+    packageversion & pkg = *i;
+    myInstaller.installOne (*pkgm, pkg, *pkg.source(),
                             "cygfile://", "/usr/src/", owner);
   }
 
