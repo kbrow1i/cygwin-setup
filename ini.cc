@@ -346,13 +346,15 @@ do_remote_ini (HWND owner)
 static bool
 do_ini_thread (HINSTANCE h, HWND owner)
 {
+  packagedb db;
+  db.read();
+
   size_t ini_count = 0;
   if (source == IDC_SOURCE_LOCALDIR)
     ini_count = do_local_ini (owner);
   else
     ini_count = do_remote_ini (owner);
 
-  packagedb db;
   db.upgrade();
 
   if (ini_count == 0)
