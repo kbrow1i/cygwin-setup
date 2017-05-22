@@ -43,7 +43,7 @@ get_file_size (const std::string& name)
   return rv;
 }
 
-std::string 
+static std::string
 base (const std::string& aString)
 {
   if (!aString.size())
@@ -52,7 +52,7 @@ base (const std::string& aString)
   std::string rv = s;
   while (*s)
     {
-      if ((*s == '/' || *s == ':' || *s == '\\') && s[1])
+      if ((*s == '/' || *s == '\\') && s[1])
 	rv = s + 1;
       s++;
     }
