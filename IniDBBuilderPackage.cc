@@ -88,7 +88,9 @@ IniDBBuilderPackage::buildPackage (const std::string& _name)
   cbpv.archive = packagesource();
 
   currentSpec = NULL;
-  currentNodeList = PackageDepends();
+  currentNodeList = NULL;
+  dependsNodeList = PackageDepends();
+  obsoletesNodeList = PackageDepends();
 #if DEBUG
   Log (LOG_BABBLE) << "Created package " << name << endLog;
 #endif
@@ -208,8 +210,9 @@ IniDBBuilderPackage::buildBeginDepends ()
   Log (LOG_BABBLE) << "Beginning of a depends statement " << endLog;
 #endif
   currentSpec = NULL;
-  currentNodeList = PackageDepends();
-  cbpv.requires = &currentNodeList;
+  dependsNodeList= PackageDepends();
+  currentNodeList = &dependsNodeList;
+  cbpv.requires = &dependsNodeList;
 }
 
 void
@@ -219,8 +222,17 @@ IniDBBuilderPackage::buildBeginBuildDepends ()
   Log (LOG_BABBLE) << "Beginning of a Build-Depends statement" << endLog;
 #endif
   currentSpec = NULL;
-  currentNodeList = PackageDepends();
+  currentNodeList = NULL;
   /* there is currently nowhere to store Build-Depends information */
+}
+
+void
+IniDBBuilderPackage::buildBeginObsoletes ()
+{
+  currentSpec = NULL;
+  obsoletesNodeList =   PackageDepends();
+  currentNodeList = &obsoletesNodeList;
+  cbpv.obsoletes = &obsoletesNodeList;
 }
 
 void
@@ -247,7 +259,8 @@ IniDBBuilderPackage::buildPackageListNode (const std::string & name)
   Log (LOG_BABBLE) << "New node '" << name << "' for package list" << endLog;
 #endif
   currentSpec = new PackageSpecification (name);
-  currentNodeList.push_back (currentSpec);
+  if (currentNodeList)
+    currentNodeList->push_back (currentSpec);
 }
 
 void
