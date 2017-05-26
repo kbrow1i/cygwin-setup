@@ -70,6 +70,7 @@ public:
   void upgrade ();
   packagemeta * findBinary (PackageSpecification const &) const;
   packagemeta * findSource (PackageSpecification const &) const;
+  packageversion findSourceVersion (PackageSpecification const &spec) const;
   packagemeta * addBinary (const std::string &pkgname, const SolverPool::addPackageData &pkgdata);
   packageversion addSource (const std::string &pkgname, const SolverPool::addPackageData &pkgdata);
   PackageDBConnectedIterator connectedBegin();

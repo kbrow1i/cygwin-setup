@@ -281,6 +281,21 @@ packagedb::findSource (PackageSpecification const &spec) const
   return NULL;
 }
 
+packageversion
+packagedb::findSourceVersion (PackageSpecification const &spec) const
+{
+  packagedb::packagecollection::iterator n = sourcePackages.find(spec.packageName());
+  if (n != sourcePackages.end())
+    {
+      packagemeta & pkgm = *(n->second);
+      for (set<packageversion>::iterator i = pkgm.versions.begin();
+           i != pkgm.versions.end(); ++i)
+        if (spec.satisfies (*i))
+          return *i;
+    }
+  return packageversion();
+}
+
 /* static members */
 
 int packagedb::installeddbread = 0;
