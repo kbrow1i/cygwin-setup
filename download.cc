@@ -203,6 +203,8 @@ do_download_thread (HINSTANCE h, HWND owner)
   /* calculate the total size of the download */
   for (SolverTransactionList::const_iterator i = t.begin (); i != t.end (); ++i)
     {
+      if (i->type != SolverTransaction::transInstall)
+	continue;
       packageversion version = i->version;
 
       try
@@ -225,6 +227,8 @@ do_download_thread (HINSTANCE h, HWND owner)
    */
   for (SolverTransactionList::const_iterator i = t.begin (); i != t.end (); ++i)
     {
+      if (i->type != SolverTransaction::transInstall)
+	continue;
       packageversion version = i->version;
 
 	{
