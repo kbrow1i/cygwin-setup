@@ -147,7 +147,7 @@ Installer::StandardDirs[] = {
 };
 
 static int num_installs, num_uninstalls;
-static void chksum_one (const packagemeta &pkg, const packagesource& pkgsource);
+static void chksum_one (const std::string &name, const packagesource& pkgsource);
 
 void
 Installer::preremoveOne (packagemeta & pkg)
@@ -829,15 +829,12 @@ do_install_thread (HINSTANCE h, HWND owner)
   for (SolverTransactionList::const_iterator i = t.begin (); i != t.end (); ++i)
   {
     packageversion version = i->version;
-    packagemeta *pkgm = db.findBinary (PackageSpecification(version.Name()));
-    if (!pkgm)
-      pkgm = db.findSource (PackageSpecification(version.Name()));
 
     if (i->type == SolverTransaction::transInstall)
     {
       try
       {
-        chksum_one (*pkgm, *version.source ());
+        chksum_one (version.Name (), *version.source ());
       }
       catch (Exception *e)
       {
@@ -994,7 +991,7 @@ sha512_str (const unsigned char *in, char *buf)
 }
 
 static void
-sha512_one (const packagemeta &pkg, const packagesource& pkgsource)
+sha512_one (const std::string &name, const packagesource& pkgsource)
 {
   std::string fullname (pkgsource.Cached ());
 
@@ -1013,7 +1010,7 @@ sha512_one (const packagemeta &pkg, const packagesource& pkgsource)
   Log (LOG_BABBLE) << "Checking SHA512 for " << fullname << endLog;
 
   Progress.SetText1 ((std::string ("Checking SHA512 for ")
-		      + pkg.name).c_str ());
+		      + name).c_str ());
   Progress.SetText4 ("Progress:");
   Progress.SetBar1 (0);
 
@@ -1050,7 +1047,7 @@ sha512_one (const packagemeta &pkg, const packagesource& pkgsource)
 }
 
 static void
-md5_one (const packagemeta &pkg, const packagesource& pkgsource)
+md5_one (const std::string &name, const packagesource& pkgsource)
 {
   std::string fullname (pkgsource.Cached ());
 
@@ -1065,7 +1062,7 @@ md5_one (const packagemeta &pkg, const packagesource& pkgsource)
   Log (LOG_BABBLE) << "Checking MD5 for " << fullname << endLog;
 
   Progress.SetText1 ((std::string ("Checking MD5 for ")
-		      + pkg.name).c_str ());
+		      + name).c_str ());
   Progress.SetText4 ("Progress:");
   Progress.SetBar1 (0);
 
@@ -1099,16 +1096,16 @@ md5_one (const packagemeta &pkg, const packagesource& pkgsource)
 }
 
 static void
-chksum_one (const packagemeta &pkg, const packagesource& pkgsource)
+chksum_one (const std::string &name, const packagesource& pkgsource)
 {
   if (!pkgsource.Cached ())
     return;
   if (pkgsource.sha512_isSet)
-    sha512_one (pkg, pkgsource);
+    sha512_one (name, pkgsource);
   else if (pkgsource.md5.isSet())
-    md5_one (pkg, pkgsource);
+    md5_one (name, pkgsource);
   else
-    Log (LOG_BABBLE) << "No checksum recorded for " << pkg.name
+    Log (LOG_BABBLE) << "No checksum recorded for " << name
 		     << ", cannot determine integrity of package!"
 		     << endLog;
 }
