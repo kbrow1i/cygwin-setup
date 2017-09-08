@@ -520,6 +520,55 @@ SolverSolution::~SolverSolution()
     }
 }
 
+void
+SolverSolution::trans2db() const
+{
+  packagedb db;
+  // First reset all packages to the "no change" state
+  for (packagedb::packagecollection::iterator i = db.packages.begin();
+       i != db.packages.end(); i++)
+    {
+      packagemeta *pkg = i->second;
+      pkg->desired = pkg->installed;
+      pkg->pick(false);
+    }
+  // Now make changes according to trans.  transErase requires some
+  // care; it could either be a "plain" uninstall, or it could be
+  // paired with a transInstall for an upgrade/downgrade or reinstall.
+  for (SolverTransactionList::const_iterator i = trans.begin();
+       i != trans.end(); i++)
+    {
+      const packageversion & pv = i->version;
+      packagemeta *pkg = db.findBinary(PackageSpecification(pv.Name()));
+      if (!pkg)
+	// Can't happen - throw an exception?
+	{
+	  Log (LOG_PLAIN) << "Can't happen.  No packagemeta for "
+			  << pv.Name() << endLog;
+	  return;
+	}
+      switch (i->type)
+	{
+	case SolverTransaction::transInstall:
+	  if (pv.Type() == package_binary)
+	    {
+	      pkg->desired  = pv;
+	      pkg->pick(true);
+	    }
+	  else			// source package
+	    pkg->srcpick(true);
+	  break;
+	case SolverTransaction::transErase:
+	  // Only relevant if pkg is still in its "no change" state
+	  if (pkg->desired == pkg->installed && !pkg->picked())
+	    pkg->desired = packageversion();
+	  break;
+	default:
+	  break;
+	}
+    }
+}
+
 static
 std::ostream &operator<<(std::ostream &stream,
                          SolverTransaction::transType type)
@@ -702,7 +751,9 @@ SolverSolution::report() const
               r += "\n";
             }
         }
-      r += "\n";
+      r += "\n\n";
+      r += "Click Back and select the Pending view\n";
+      r += "to see/edit the default problem solutions\n";
     }
   return r;
 }

@@ -61,7 +61,6 @@ class SolvableVersion
   bool accessible () const;
   package_type_t Type () const;
   package_stability_t Stability () const;
-
   // the associated source package, if this is a binary package
   SolvableVersion sourcePackage () const;
 
@@ -226,6 +225,9 @@ class SolverSolution
  public:
   SolverSolution(SolverPool &_pool) : pool(_pool), solv(NULL) {};
   ~SolverSolution();
+
+  /* Reset package database to correspond to trans */
+  void trans2db() const;
 
   bool update(SolverTasks &tasks, bool update, bool use_test_packages, bool include_source);
   std::string report() const;
