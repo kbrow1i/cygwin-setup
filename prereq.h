@@ -35,7 +35,7 @@ private:
 class PrereqChecker
 {
 public:
-  // returns true if dependency problems exist
+  // returns true if no dependency problems exist
   bool isMet ();
 
   // formats 'unmet' as a string for display
