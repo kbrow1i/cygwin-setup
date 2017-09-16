@@ -353,6 +353,7 @@ do_ini_thread (HINSTANCE h, HWND owner)
     ini_count = do_remote_ini (owner);
 
   packagedb db;
+  db.makeBase();
   db.read();
   db.upgrade();
 
