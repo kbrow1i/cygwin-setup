@@ -180,6 +180,9 @@ class SolverTasks
   {
     tasks.push_back(taskList::value_type(v, t));
   };
+  /* Create solver tasks corresponding to state of database */
+  void setTasks();
+
  private:
   typedef std::vector<std::pair<const SolvableVersion, task>> taskList;
   taskList tasks;

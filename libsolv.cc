@@ -12,6 +12,8 @@
  */
 
 #include "libsolv.h"
+#include "package_db.h"
+#include "package_meta.h"
 
 #include "solv/solver.h"
 #include "solv/solverdebug.h"
@@ -446,6 +448,45 @@ SolverPool::internalize()
        i++)
     {
       repodata_internalize(i->second->data);
+    }
+}
+
+void
+SolverTasks::setTasks()
+{
+  // go through all packages, adding changed ones to the solver task list
+  packagedb db;
+
+  for (packagedb::packagecollection::iterator p = db.packages.begin ();
+       p != db.packages.end (); ++p)
+    {
+      packagemeta *pkg = p->second;
+
+      // decode UI state to action
+      // skip and keep don't change dependency solution
+      // except when we want to keep an old version
+      if (pkg->installed != pkg->desired)
+        {
+          if (pkg->desired)
+            add(pkg->desired, taskInstall); // install/upgrade
+          else
+            add(pkg->installed, taskUninstall); // uninstall
+        }
+      else if (pkg->installed)
+	{
+	  if (pkg->picked())
+	    add(pkg->installed, taskReinstall); // reinstall
+	  else if (pkg->installed < pkg->default_version)
+	    add(pkg->installed, taskKeep); // keep
+	}
+      // only install action makes sense for source packages
+      if (pkg->srcpicked())
+        {
+          if (pkg->desired)
+            add(pkg->desired.sourcePackage(), taskInstall);
+          else
+            add(pkg->installed.sourcePackage(), taskInstall);
+        }
     }
 }
 
