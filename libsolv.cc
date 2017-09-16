@@ -95,14 +95,15 @@ SolvableVersion::Type () const
 }
 
 const PackageDepends
-SolvableVersion::depends() const
+SolvableVersion::depends(bool obsoletes) const
 {
   Solvable *solvable = pool_id2solvable(pool, id);
 
   Queue q;
   queue_init(&q);
 
-  if (repo_lookup_idarray(solvable->repo, id, SOLVABLE_REQUIRES, &q))
+  Id keyname = obsoletes ? SOLVABLE_OBSOLETES : SOLVABLE_REQUIRES;
+  if (repo_lookup_idarray(solvable->repo, id, keyname, &q))
     {
       // convert
       PackageDepends dep;
