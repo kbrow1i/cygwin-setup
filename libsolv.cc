@@ -643,6 +643,7 @@ SolverSolution::update(SolverTasks &tasks, bool update, bool use_test_packages, 
 
   solver_set_flag(solv, SOLVER_FLAG_ALLOW_VENDORCHANGE, 1);
   solver_set_flag(solv, SOLVER_FLAG_ALLOW_DOWNGRADE, 0);
+  solver_set_flag(solv, SOLVER_FLAG_FOCUS_BEST, 1);
   solver_solve(solv, &job);
   queue_free(&job);
 
