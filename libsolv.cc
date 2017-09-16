@@ -454,6 +454,7 @@ SolverPool::internalize()
 void
 SolverTasks::setTasks()
 {
+  install_count = 0;
   // go through all packages, adding changed ones to the solver task list
   packagedb db;
 
@@ -468,7 +469,10 @@ SolverTasks::setTasks()
       if (pkg->installed != pkg->desired)
         {
           if (pkg->desired)
-            add(pkg->desired, taskInstall); // install/upgrade
+	    {
+	      add(pkg->desired, taskInstall); // install/upgrade
+	      ++install_count;
+	    }
           else
             add(pkg->installed, taskUninstall); // uninstall
         }
@@ -486,6 +490,7 @@ SolverTasks::setTasks()
             add(pkg->desired.sourcePackage(), taskInstall);
           else
             add(pkg->installed.sourcePackage(), taskInstall);
+          ++install_count;
         }
     }
 }
@@ -652,11 +657,15 @@ SolverSolution::update(SolverTasks &tasks, bool update, bool use_test_packages, 
   // massage into SolverTransactions form
   trans.clear();
 
+  size_t trans_install_count = 0;
+
   for (int i = 0; i < t->steps.count; i++)
     {
       Id id = t->steps.elements[i];
       SolverTransaction::transType tt = type(t, i);
       trans.push_back(SolverTransaction(SolvableVersion(id, pool.pool), tt));
+      if (tt == SolverTransaction::transInstall)
+        ++trans_install_count;
     }
 
   // add install and remove tasks for anything marked as reinstall
@@ -710,7 +719,12 @@ SolverSolution::update(SolverTasks &tasks, bool update, bool use_test_packages, 
 
   transaction_free(t);
 
-  return (pcnt == 0);
+  // If the solver reported problems or the number of Install
+  // transactions differs from the number requested, let the user
+  // review the solution.  FIXME - Counting Install transactions might
+  // be OK for the moment, but it might not be later if we start using
+  // more features of libsolv.
+  return (pcnt == 0 && tasks.install_count == trans_install_count);
 }
 
 const SolverTransactionList &
@@ -752,9 +766,10 @@ SolverSolution::report() const
             }
         }
       r += "\n\n";
-      r += "Click Back and select the Pending view\n";
-      r += "to see/edit the default problem solutions\n";
     }
+  r += "Click Back and select the Pending view to review\n";
+  r += "the default problem solutions, including packages\n";
+  r += "that were added to resolve dependencies\n";
   return r;
 }
 
