@@ -622,10 +622,9 @@ std::ostream &operator<<(std::ostream &stream,
 }
 
 bool
-SolverSolution::update(SolverTasks &tasks, bool update, bool use_test_packages, bool include_source)
+SolverSolution::update(SolverTasks &tasks, bool use_test_packages, bool include_source)
 {
   Log (LOG_PLAIN) << "solving: " << tasks.tasks.size() << " tasks," <<
-    " update: " << (update ? "yes" : "no") << "," <<
     " use test packages: " << (use_test_packages ? "yes" : "no") << "," <<
     " include_source: " << (include_source ? "yes" : "no") << endLog;
 
@@ -660,9 +659,6 @@ SolverSolution::update(SolverTasks &tasks, bool update, bool use_test_packages, 
           Log (LOG_PLAIN) << "unknown task " << (*i).second << endLog;
         }
     }
-
-  if (update)
-    queue_push2(&job, SOLVER_UPDATE | SOLVER_SOLVABLE_ALL, 0);
 
   // Ask solver to check dependencies of installed packages.
   queue_push2(&job, SOLVER_VERIFY | SOLVER_SOLVABLE_ALL, 0);
