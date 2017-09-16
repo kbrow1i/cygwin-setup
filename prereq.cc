@@ -75,7 +75,7 @@ void
 PrereqPage::OnActivate()
 {
   // if we have gotten this far, then PrereqChecker has already run isMet
-  // and found that there were missing packages; so we can just call
+  // and found that there were problems; so we can just call
   // getUnmetString to format the results and display it
 
   std::string s;
