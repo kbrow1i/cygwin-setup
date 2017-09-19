@@ -185,8 +185,6 @@ class SolverTasks
  private:
   typedef std::vector<std::pair<const SolvableVersion, task>> taskList;
   taskList tasks;
-  /* How many taskInstalls are on the list? */
-  size_t install_count;
 
   friend SolverSolution;
 };
