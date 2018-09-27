@@ -22,6 +22,7 @@
 #include "RECTWrapper.h"
 #include "msg.h"
 #include "resource.h"
+#include "state.h"
 
 ATOM Window::WindowClassAtom = 0;
 HINSTANCE Window::AppInstance = NULL;
@@ -227,6 +228,10 @@ Window::CenterWindow ()
   int WindowWidth, WindowHeight;
   POINT p;
 
+  if(unattended_mode){
+	  ShowWindow(WindowHandle, SW_MINIMIZE);
+	  return;
+  }
   // Get the window rectangle
   WindowRect = GetWindowRect ();
 
